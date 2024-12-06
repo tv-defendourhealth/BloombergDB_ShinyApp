@@ -12,6 +12,8 @@ library("DT")
 library("plotly")
 library("RColorBrewer")
 
+# test 
+
 # Source scripts -------------------------------------------------------------------------
 
 source("2-create-maps.R")
