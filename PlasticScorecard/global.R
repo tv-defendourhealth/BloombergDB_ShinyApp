@@ -12,7 +12,6 @@ library("DT")
 library("plotly")
 library("RColorBrewer")
 
-# test 
 
 # Source scripts -------------------------------------------------------------------------
 
