@@ -15,9 +15,9 @@ ui <- page_navbar(
   theme = bs_theme(
     bg = "#fcfcfa",
     fg = "#101010",
-    primary = "#a4c24a",
-    secondary = "#e68c37",
-    success = "#2cc0e6",
+    primary = "#a5ce41",
+    secondary = "#d2702b",
+    success = "#00a7d4",
     base_font = font_google("Inter"),
     code_font = font_google("JetBrains Mono")
   ),
@@ -48,87 +48,128 @@ nav_panel("Home",
              )
            ),
           # -------------------------------------------------------------------------
-          # INTRO TEXT ABOUT THE SCORECARD
+          # INTRO TEXT ABOUT THE WEBSITE
            layout_column_wrap(
              width = 1,
              heights_equal = "row",
              style = css(
-               min_height = "300px"  # Adjust this value as needed
+               min_height = "250px"  # Adjust this value as needed
              ),
              card(
                class = "m-4", #adds margin
                full_screen = FALSE,
                height = "100%",
                card_header("Welcome to the Plastic Scorecard Project"),
-               card_body(
+               card_body(HTML(
                  "The Plastic Scorecard is an initiative aimed at identifying the harms of various types of plastic commonly used today. 
                   Our goal is to present comprehensive data and analysis to help individuals, businesses, and policymakers make informed decisions about plastic use.
-                  Here we present information about 6 of the most commonly used plastics. Click through the following buttons to learn about each plastic from production to final products."
+                  Here we present information about 6 of the most commonly used plastics. 
+                 <br><br>
+                 Click through the following buttons to learn about each plastic from production to final products.")
                )
              )
            ),
           
-          # -------------------------------------------------------------------------
-          # MAP
+          # CREATE BUTTONS -------------------------------------------------------------------------
+          
+          tags$head(
+            tags$style(HTML("
+                            .button-container {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            height: 0vh; 
+                            }
+                            .arrow {
+                            font-size: 36px;
+                            margin: 0 20px;
+                            }
+                            .btn-icon {
+                            font-size: 48px;
+                            width: 120px !important;
+                            height: 120px !important;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background-color: #f8f9fa;
+                            border: 2px solid #dee2e6;
+                            transition: all 0.3s ease;
+                            }
+                            .btn-icon: hover {
+                            background-color: #e9ecef; 
+                            transform: scale(1.05);
+                            }"))
+          ),
+          
           layout_column_wrap(
             width = 1,
             heights_equal = "row",
             style = css(
-              min_height = "600px",  # Adjust this value as needed
-              margin = "1rem",  # Outer margin for the entire row
-              padding = "0 0.5rem"  # Inner padding between cards (half on each side)
+              min_height = "300px"  # Adjust this value as needed
             ),
             card(
-              #class = "m-4",
-              full_screen = TRUE,
+              class = "borderless-card",
+              style = "border: none; box-shadow: none;",
+              full_screen = FALSE,
               height = "100%",
-              style = css(
-                margin = "0 -0.25rem 0 0"  # Negative right margin to counteract padding
-              ),
-              div(
-                style = "display: flex; align-items: center; margin-bottom: .5rem;",
-                img(src = "map-icon.png", width = "6%", style = "margin-right: 2rem;"),
-                h2("Explore each plastic production facility and its harms here", 
-                   style = "font-size: 1.2em; margin: 0;")
-              ),
               card_body(
-                selectInput("metric", "Select Metric:",
-                            choices = metrics,
-                            selected = "co2e"),
-                selectInput("plastic_type", "Select Plastic Type:",
-                            choices = plastic_types,
-                            selected = "All"),
-                leafletOutput("facility_map", height = "400px")
+                tags$div(
+                  class = "button-container",
+                  style = "display: flex; align-items: center; justify-content: center; height: 100%;",
+                  tags$div(
+                    style = "display: flex; flex-direction: column; align-items: center;",
+                    actionButton("production_btn", "", icon = icon("industry"), class = "btn-icon"), #FONT AWESOME ICONS
+                    tags$div(style = "text-align: center; margin-top: 10px;", "Click to explore Production")
+                  ),
+                  tags$span(class = "arrow", HTML("&rarr;")),
+                  tags$div(
+                    style = "display: flex; flex-direction: column; align-items: center;",
+                    actionButton("additives_btn", "", icon = icon("flask"), class = "btn-icon"),
+                    tags$div(style = "text-align: center; margin-top: 10px;", "Click to explore Additives")
+                  ),
+                  tags$span(class = "arrow", HTML("&rarr;")),
+                  tags$div(
+                    style = "display: flex; flex-direction: column; align-items: center;",
+                    actionButton("products_btn", "", icon = icon("bottle-water"), class = "btn-icon"),
+                    tags$div(style = "text-align: center; margin-top: 10px;", "Click to explore Products")
+                  )
+                )
               )
-            )),
+            )
+          ),
+          
+
+          # PRODUCTION TABS ---------------------------------------------------------   
+         
+          uiOutput("dynamic_content"),
           
           # -------------------------------------------------------------------------
           # CHEM ADDITIVES
-          layout_column_wrap(
-            width = 1,
-            heights_equal = "row",
-            style = css(
-              min_height = "600px",  # Adjust this value as needed
-              margin = "1rem",  # Outer margin for the entire row
-              padding = "0 0.5rem"  # Inner padding between cards (half on each side)
-            ),
-            card(
-              #class = "m-4",
-              full_screen = TRUE,
-              height = "100%",
-              style = css(
-                margin = "0 -0.25rem 0 0"  # Negative right margin to counteract padding
-              ),
-              div(
-                style = "display: flex; align-items: center; margin-bottom: .5rem;",
-                img(src = "chemical-icon.png", width = "6%", style = "margin-right: 2rem;"),
-                h2("Explore some of the chemical additives found in each plastic type here", 
-                   style = "font-size: 1.2em; margin: 0;")
-              ),
-              card_body(
-                div(DTOutput("additives_table"), style = "font-size:85%")
-              )
-            )),
+          # layout_column_wrap(
+          #   width = 1,
+          #   heights_equal = "row",
+          #   style = css(
+          #     min_height = "600px",  # Adjust this value as needed
+          #     margin = "1rem",  # Outer margin for the entire row
+          #     padding = "0 0.5rem"  # Inner padding between cards (half on each side)
+          #   ),
+          #   card(
+          #     full_screen = TRUE,
+          #     height = "100%",
+          #     style = css(
+          #       margin = "0 -0.25rem 0 0"  # Negative right margin to counteract padding
+          #     ),
+          #     div(
+          #       style = "display: flex; align-items: center; margin-bottom: .5rem;",
+          #       img(src = "chemical-icon.png", width = "6%", style = "margin-right: 2rem;"),
+          #       h2("Explore some of the chemical additives found in each plastic type here", 
+          #          style = "font-size: 1.2em; margin: 0;")
+          #     ),
+          #     card_body(
+          #       div(DTOutput("additives_table"), style = "font-size:85%")
+          #     )
+          #   )),
           
           # -------------------------------------------------------------------------
           # CONSUMER PRODUCTS

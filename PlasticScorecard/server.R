@@ -27,30 +27,159 @@ generate_scorecard <- function() {
   return(combined_scores)
 }
 
-scorecard <- generate_scorecard()
 
 # Server function ----------------------------------------------------------
 
 server <- function(input, output, session) {
   
-  # FOR MAP: -------------------------------------------------------------------------
+  # --------------------- TRACK THE ACTIVE BUTTON PRESS (NULL VAL TOO)
+  active_tab <- reactiveVal(NULL)
   
-  # Load the data
-  map_data <- readRDS("data/for_map.rds")
-  
-  # Render the map
-  output$facility_map <- renderLeaflet({
-       
-    # Call the custom map generation function sourced in 2-create-maps.Rmd
-    create_custom_map(map_data, 
-                      input$metric, 
-                      get_metric_name(input$metric), #metric name
-                      input$plastic_type, 
-                      color_palette = c("#fee8c8", "#fdbb84", "#e34a33"))
+  # Observe button clicks and update the active tab
+  observeEvent(input$production_btn, {
+    active_tab("production")
   })
   
-  # CONSUMER PRODUCTS: -------------------------------------------------------------------------
+  observeEvent(input$additives_btn, {
+    active_tab("additives")
+  })
   
+  observeEvent(input$products_btn, {
+    active_tab("products")
+  })
+  
+  # --------------------- RENDER DYNAMIC CONTENT BASED ON ACTIVE BUTTON PRESS
+  output$dynamic_content <- renderUI({
+    req(active_tab())  # Ensure that active_tab is not NULL
+    
+    if (active_tab() == "production") {
+      
+        return(
+          div(
+            style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed
+            navset_card_tab(
+              id = "plastic_tabs",
+              !!!lapply(names(plastic_types)[names(plastic_types) != "All plastic"], function(plastic_name) {
+                nav_panel(
+                  plastic_name,
+                  create_production_panel(plastic_name) # Supply chain diagram
+                  )
+                })
+              )
+            )
+        )  
+      } 
+    
+    else if (active_tab() == "additives") {
+      
+      return(
+        div(
+          style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed 
+          tagList(
+            div(
+              style = "margin-top: 20px;",
+              fa("flask", height = "2em"),
+              p("Fossil-fuel plastics always require the addition of toxic additives, various chemicals that impart different properties.
+                There are thousands of types of additives that can change the plastic color, strength, durability, flexibility, heat resistance, flammabilty, and more.  
+                Industry does not disclose all the additives they use so it's impossible to create a comprehensive list.
+                Below are some of the additives we have found to be used in each type of plastic and the associated hazard scores.
+                ", 
+              style = "font-size: .9em;"),
+              p(style = "font-size: 0.9em; font-style: italic;",
+                paste("Red/3 = High hazard (Greenscreen LT-1, LT-P1, BM-1),
+                 Orange/2 = Moderate hazard (Greenscreen LT-2, BM-2, or unknown),
+                 Yellow/1 = Low hazard (Greenscreen LT-3 or BM-3),
+                 Green/0 = No hazard (Greenscreen BM-4)")),
+              ),
+            card(
+              full_screen = TRUE,
+              height = "100%",
+              card_body(
+                div(uiOutput("filter_ui"),
+                    DTOutput("additives_table"), style = "font-size:85%")
+                )
+              )
+            )
+          )
+      )
+      }
+    
+    else if (active_tab() == "products") {
+      
+    }
+    
+    # If no button has been clicked, return NULL (blank)
+    return(NULL)
+  })
+  
+  # --------------------- CREATE MAPS
+  observe({
+    req(active_tab() == "production")  # Only run if in production tab
+    
+    for(full_name in names(plastic_types)) {
+      local({
+        local_full_name <- full_name
+        local_abbreviation <- plastic_types[local_full_name]
+        
+        output[[paste0("facility_map_", local_abbreviation)]] <- renderLeaflet({
+          create_custom_map(map_data,
+                            input[[paste0("metric_", local_abbreviation)]],
+                            get_metric_name(input[[paste0("metric_", local_abbreviation)]]),
+                            local_abbreviation, 
+                            color_palette = c("#fee8c8", "#fdbb84", "#e34a33"))
+        })
+      })
+    }
+  })
+  
+  # --------------------- CREATE ADDITIVE TABLE
+  additives_data$plastic <- as.factor(additives_data$plastic)
+  additives_data$category <- as.factor(additives_data$category)
+  
+  output$filter_ui <- renderUI({
+    req(active_tab() == "additives")  # Only show filters when in additives tab
+    
+    fluidRow(
+      column(6,
+             selectInput("plastic_filter", "Filter by Plastic:",
+                         choices = c("All", levels(additives_data$plastic)),  # Include all unique values
+                         selected = "All")
+      ),
+      column(6,
+             selectInput("category_filter", "Filter by Additive Category:",
+                         choices = c("All", levels(additives_data$category)),  # Include all unique values
+                         selected = "All")
+      )
+    )
+  })
+  
+  output$additives_table <- renderDT({
+    req(active_tab() == "additives")  # Only run if in additives tab
+    
+    # Filter data based on selections
+    filtered_data <- additives_data
+    
+    if (input$plastic_filter != "All") {
+      filtered_data <- filtered_data[filtered_data$plastic == input$plastic_filter, ]
+    }
+    
+    if (input$category_filter != "All") {
+      filtered_data <- filtered_data[filtered_data$category == input$category_filter, ]
+    }
+    
+    datatable(
+      filtered_data,
+      options = list(
+        pageLength = 200,
+        autoWidth = TRUE,
+        dom = 'Bfrtip',  # Include buttons and filtering
+        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')  # Optional: Add export buttons
+      )
+    )
+  })
+  
+  
+  # CONSUMER PRODUCTS: -------------------------------------------------------------------------
 
     # Load data:
   marketshare <- readRDS("data/marketshare.rds")
@@ -171,6 +300,7 @@ server <- function(input, output, session) {
   })
 
 
+  
   # FOR FULL DATA TABLE: -------------------------------------------------------------------------
   
   filtered_data <- reactive({
@@ -206,16 +336,5 @@ server <- function(input, output, session) {
     )
   })
   
-  # FOR ADDITIVES TABLE: -------------------------------------------------------------------------
-  # Render the filtered DataTable
-  
-  output$additives_table <- renderDT({
-    datatable(
-      additives,
-      options = list(
-        pageLength = 200,
-        autoWidth = TRUE
-      )
-    )
-  })
+
 }

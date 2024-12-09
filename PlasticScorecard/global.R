@@ -11,6 +11,7 @@ library("ggrepel")
 library("DT")
 library("plotly")
 library("RColorBrewer")
+library("fontawesome")
 
 
 # Source scripts -------------------------------------------------------------------------
@@ -20,7 +21,9 @@ source("3-create-scores.R")
 
 display_db <- readRDS("data/full_db_display.rds") 
 
-additives <- readRDS("data/additives.rds")
+additives_data <- readRDS("data/additives.rds")
+
+map_data <- readRDS("data/for_map.rds")
 
 # Useful stuff ----------------------------------------------------------
 
@@ -46,8 +49,7 @@ plastic_types_forproducts <- c(
 
 metrics <- c(
   "CO2 Emissions" = "co2e",
-  "Toxic Emissions" = "total_tox",
-  "Health Impact (RSEI)" = "facility_RSEI_score"
+  "Toxic Emissions" = "total_tox"
 )
 
 get_plastic_name <- function(code) {
@@ -94,3 +96,54 @@ create_plastic_panel <- function(plastic_name) {
   )
 }
 
+create_production_panel <- function(plastic_name) {
+    monomer <- switch(plastic_name,
+                      "polypropylene" = "propylene",
+                      "polyethylene" = "ethylene",
+                      "polyvinychloride" = "vinyl chloride",
+                      "polystyrene" = "styrene",
+                      "PET (polyethylene terephthalate)" = "terephthalate and ethylene glycol",
+                      "PLA (polylactic acid)" = "lactide")
+  
+  tagList(
+   
+    # Spacer and supply chain diagram explanation
+    div(
+      style = "margin-top: 20px;",  # Add space above the map explanation
+      fa("industry", height = "2em"),
+      p(paste0(tools::toTitleCase(plastic_name), " plastic is made by stringing together several monomers of ", monomer, 
+               ". Below are the steps used in making ", monomer, " and the associated hazards. 
+             Facilities across the U.S. are involved in the process of making ", plastic_name, "."))
+    ),
+    card(
+      img(src = paste0(plastic_types[plastic_name], "_supplychain.png"), width = "100%"),
+      p(style = "font-size: 0.9em; font-style: italic;",
+      paste("Red = High hazard (Greenscreen LT-1, LT-P1, BM-1),
+     Orange = Moderate hazard (Greenscreen LT-2, BM-2, or unknown),
+     Yellow = Low hazard (Greenscreen LT-3 or BM-3),
+     Green = No hazard (Greenscreen BM-4)"))
+    ),
+    
+    # Spacer and map explanation
+    div(
+      style = "margin-top: 20px;",  # Add space above the map explanation
+      fa("map-location-dot", height = "2em"),
+      p("The map below shows facilities across the U.S. involved in the production of ", tools::toTitleCase(plastic_name), 
+        ". Select a metric from the dropdown menu to visualize data related to these facilities.
+        Click on the facility to see more info about the facility.")
+    ),
+    
+    card(
+      full_screen = TRUE,
+      height = "100%",
+      style = css(margin = "0 -0.25rem 0 0"),
+      card_body(
+        selectInput(inputId = paste0("metric_", plastic_types[plastic_name]), 
+                    label = "Select Metric:",
+                    choices = metrics,
+                    selected = "co2e"),
+        leafletOutput(outputId = paste0("facility_map_", plastic_types[plastic_name]), height = "400px")
+      )
+    )
+  )
+}
