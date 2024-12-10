@@ -31,21 +31,30 @@ generate_scorecard <- function() {
 # Server function ----------------------------------------------------------
 
 server <- function(input, output, session) {
-  
+
   # --------------------- TRACK THE ACTIVE BUTTON PRESS (NULL VAL TOO)
   active_tab <- reactiveVal(NULL)
   
   # Observe button clicks and update the active tab
   observeEvent(input$production_btn, {
     active_tab("production")
+    #delay(500, { session$sendCustomMessage(type = 'scroll', message = 'dynamic_content') })
+    #session$sendCustomMessage(type = 'scroll', message = 'dynamic_content')  # Call custom scroll
+    #shinyjs::scrollTo("dynamic_content")
   })
   
   observeEvent(input$additives_btn, {
     active_tab("additives")
+    #delay(500, { session$sendCustomMessage(type = 'scroll', message = 'dynamic_content') })
+    #session$sendCustomMessage(type = 'scroll', message = 'dynamic_content')  # Call custom scroll
+    #shinyjs::scrollTo("dynamic_content")
   })
   
   observeEvent(input$products_btn, {
     active_tab("products")
+    #delay(500, { session$sendCustomMessage(type = 'scroll', message = 'dynamic_content') })
+    #session$sendCustomMessage(type = 'scroll', message = 'dynamic_content')  # Call custom scroll
+    #shinyjs::scrollTo("dynamic_content")
   })
   
   # --------------------- RENDER DYNAMIC CONTENT BASED ON ACTIVE BUTTON PRESS
@@ -53,16 +62,19 @@ server <- function(input, output, session) {
     req(active_tab())  # Ensure that active_tab is not NULL
     
     if (active_tab() == "production") {
-      
-        return(
+        
+      return(
           div(
+            id = "dynamic_content",
             style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed
             navset_card_tab(
               id = "plastic_tabs",
               !!!lapply(names(plastic_types)[names(plastic_types) != "All plastic"], function(plastic_name) {
                 nav_panel(
-                  plastic_name,
+                  title = plastic_name,
                   create_production_panel(plastic_name) # Supply chain diagram
+                  #div(data-aos = "fade-up", create_production_panel(plastic_name))
+                  #aos(create_production_panel(plastic_name), animation = "fade-up")
                   )
                 })
               )
@@ -73,30 +85,37 @@ server <- function(input, output, session) {
     else if (active_tab() == "additives") {
       
       return(
-        div(
+          div(
+          id = "dynamic_content",
           style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed 
           tagList(
-            div(
-              style = "margin-top: 20px;",
-              fa("flask", height = "2em"),
-              p("Fossil-fuel plastics always require the addition of toxic additives, various chemicals that impart different properties.
+            card(
+              full_screen = TRUE,
+              style = "margin-bottom: 20px;",
+              card_body(
+                div(
+                  style = "margin-top: 20px;",
+                  fa("flask", height = "2em"),
+                  p("Fossil-fuel plastics always require the addition of toxic additives, various chemicals that impart different properties.
                 There are thousands of types of additives that can change the plastic color, strength, durability, flexibility, heat resistance, flammabilty, and more.  
                 Industry does not disclose all the additives they use so it's impossible to create a comprehensive list.
                 Below are some of the additives we have found to be used in each type of plastic and the associated hazard scores.
                 ", 
-              style = "font-size: .9em;"),
-              p(style = "font-size: 0.9em; font-style: italic;",
-                paste("Red/3 = High hazard (Greenscreen LT-1, LT-P1, BM-1),
+                    style = "font-size: .9em;"),
+                  p(style = "font-size: 0.9em; font-style: italic;",
+                    paste("Red/3 = High hazard (Greenscreen LT-1, LT-P1, BM-1),
                  Orange/2 = Moderate hazard (Greenscreen LT-2, BM-2, or unknown),
                  Yellow/1 = Low hazard (Greenscreen LT-3 or BM-3),
                  Green/0 = No hazard (Greenscreen BM-4)")),
-              ),
-            card(
-              full_screen = TRUE,
-              height = "100%",
-              card_body(
-                div(uiOutput("filter_ui"),
-                    DTOutput("additives_table"), style = "font-size:85%")
+                ),
+                card(
+                  full_screen = TRUE,
+                  height = "100%",
+                  card_body(
+                    div(uiOutput("filter_ui"),
+                        DTOutput("additives_table"), style = "font-size:85%")
+                    )
+                  )
                 )
               )
             )
@@ -105,7 +124,21 @@ server <- function(input, output, session) {
       }
     
     else if (active_tab() == "products") {
-      
+      return(
+        div(
+          id = "dynamic_content",
+          style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed
+          navset_card_tab(
+            id = "plastic_tabs",
+            !!!lapply(names(plastic_types_forproducts), function(plastic_name) {
+              nav_panel(
+                title = plastic_name,
+                create_product_panel(plastic_name) # Supply chain diagram
+              )
+            })
+          )
+        )
+      )  
     }
     
     # If no button has been clicked, return NULL (blank)
@@ -175,24 +208,32 @@ server <- function(input, output, session) {
         dom = 'Bfrtip',  # Include buttons and filtering
         buttons = c('copy', 'csv', 'excel', 'pdf', 'print')  # Optional: Add export buttons
       )
-    )
+    ) %>% 
+      formatStyle(
+        'hazard_score',
+        backgroundColor = styleEqual(c(0, 1, 2, 3), 
+                                     c('green','yellow','orange','red')),
+        color = styleEqual(c(0, 1, 2, 3), c('white','black','black','white'))
+      )
   })
   
   
-  # CONSUMER PRODUCTS: -------------------------------------------------------------------------
-
+  # --------------------- PRODUCT CATEGORIES
+  
     # Load data:
   marketshare <- readRDS("data/marketshare.rds")
   categories <- readRDS("data/categories.rds")
 
   # Create pie charts for each plastic type:
-  lapply((plastic_types_forproducts), function(plastic_code) {
+  lapply((names(plastic_types_forproducts)), function(plastic_name) {
     
-    source_info <- marketshare[marketshare$plastic == plastic_code, "source_s"][1,]
+    plastic_abbrev <- plastic_types_forproducts[plastic_name]
+    
+    source_info <- marketshare[marketshare$plastic == plastic_abbrev, "source_s"][1,]
 
-     output[[paste0("pie_", plastic_code)]] <- renderPlotly({
+     output[[paste0("pie_", plastic_abbrev)]] <- renderPlotly({
       
-      data <- marketshare[marketshare$plastic == plastic_code, ]
+      data <- marketshare[marketshare$plastic == plastic_abbrev, ]
       
       # Define the number of categories
       num_categories <- nrow(data)
@@ -203,7 +244,7 @@ server <- function(input, output, session) {
       
       p <- plot_ly(data, labels = ~category, values = ~percent_plastic, type = "pie",
               marker = list(colors = chart_colors),
-              source = paste0("pie_", plastic_code),
+              source = paste0("pie_", plastic_abbrev),
               hoverinfo = "label+percent",
               textinfo = "label+percent")  %>%
         layout(title = paste(names(plastic_types_forproducts), "Market Share"),
@@ -233,19 +274,21 @@ server <- function(input, output, session) {
   })
 
   # Handle the ability to hover/unhover and display product types
-  lapply((plastic_types_forproducts), function(plastic_code) {
+  lapply(names(plastic_types_forproducts), function(plastic_name) {
 
+    plastic_abbrev <- plastic_types_forproducts[plastic_name]
+    
     # Hover event:
-    observeEvent(event_data("plotly_hover", source = paste0("pie_", plastic_code)), {
-      hover_data <- event_data("plotly_hover", source = paste0("pie_", plastic_code))
+    suppressWarnings(observeEvent(event_data("plotly_hover", source = paste0("pie_", plastic_abbrev)), {
+      hover_data <- event_data("plotly_hover", source = paste0("pie_", plastic_abbrev))
       
-      output[[paste0("product_info_", plastic_code)]] <- renderUI({
+      output[[paste0("product_info_", plastic_abbrev)]] <- renderUI({
         if (!is.null(hover_data) && !is.null(hover_data$pointNumber)) {
-          data <- marketshare[marketshare$plastic == plastic_code, ]
+          data <- marketshare[marketshare$plastic == plastic_abbrev, ]
           category <- data$category[hover_data$pointNumber + 1] # +1 because it's 0-indexed
           
           category_info <- categories %>% 
-            filter(plastic == !!plastic_code, category == !!category)
+            filter(plastic == !!plastic_abbrev, category == !!category)
           
           if (nrow(category_info) > 0) {
             # Separate subcategories with images and without
@@ -253,7 +296,7 @@ server <- function(input, output, session) {
             without_images <- category_info %>% filter(is.na(jpg_name)) %>% pull(subcategories)
             
             tagList(
-              h5(paste("Example", category, "products made from", plastic_code)),
+              h5(paste("Example", category, "products made from", plastic_abbrev)),
               
               # Display subcategories with images
               if (nrow(with_images) > 0) {
@@ -285,18 +328,18 @@ server <- function(input, output, session) {
           }
         } 
       })
-    })
+    }))
     
     # Unhover event:
-    observeEvent(event_data("plotly_unhover", source = paste0("pie_",plastic_code)), {
-      output[[paste0("product_info_", plastic_code)]] <- renderUI({
+    suppressWarnings(observeEvent(event_data("plotly_unhover", source = paste0("pie_",plastic_abbrev)), {
+      output[[paste0("product_info_", plastic_abbrev)]] <- renderUI({
         
-        data <- marketshare[marketshare$plastic == plastic_code, ]
+        data <- marketshare[marketshare$plastic == plastic_abbrev, ]
         descriptor <- data$descriptor[1]
         
         HTML(descriptor)
       })
-    }, ignoreNULL = FALSE)
+    }, ignoreNULL = FALSE))
   })
 
 
@@ -336,5 +379,4 @@ server <- function(input, output, session) {
     )
   })
   
-
 }

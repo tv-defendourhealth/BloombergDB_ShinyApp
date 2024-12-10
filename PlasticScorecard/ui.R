@@ -42,7 +42,7 @@ nav_panel("Home",
                style = "background-color: rgba(0, 0, 0, 0.6); border: none;",  # Make background transparent
                card_body(
                  class = "d-flex align-items-center justify-content-center",
-                 h1("Welcome to Defend Our Health's Plastic Scorecard", 
+                 h1("Learn about the harms of plastic production", 
                     style = "font-size: 24px; font-weight: bold; color: white; text-align: center;")
                )
              )
@@ -139,76 +139,15 @@ nav_panel("Home",
             )
           ),
           
+          div(
+            p("click buttons above to learn about phases of plastic production")
+          ),
 
-          # PRODUCTION TABS ---------------------------------------------------------   
+          # CONTENT FOR EACH TAB ---------------------------------------------------------   
          
-          uiOutput("dynamic_content"),
+          #aos(uiOutput("dynamic_content"), animation = "fade-up")
+          uiOutput("dynamic_content")
           
-          # -------------------------------------------------------------------------
-          # CHEM ADDITIVES
-          # layout_column_wrap(
-          #   width = 1,
-          #   heights_equal = "row",
-          #   style = css(
-          #     min_height = "600px",  # Adjust this value as needed
-          #     margin = "1rem",  # Outer margin for the entire row
-          #     padding = "0 0.5rem"  # Inner padding between cards (half on each side)
-          #   ),
-          #   card(
-          #     full_screen = TRUE,
-          #     height = "100%",
-          #     style = css(
-          #       margin = "0 -0.25rem 0 0"  # Negative right margin to counteract padding
-          #     ),
-          #     div(
-          #       style = "display: flex; align-items: center; margin-bottom: .5rem;",
-          #       img(src = "chemical-icon.png", width = "6%", style = "margin-right: 2rem;"),
-          #       h2("Explore some of the chemical additives found in each plastic type here", 
-          #          style = "font-size: 1.2em; margin: 0;")
-          #     ),
-          #     card_body(
-          #       div(DTOutput("additives_table"), style = "font-size:85%")
-          #     )
-          #   )),
-          
-          # -------------------------------------------------------------------------
-          # CONSUMER PRODUCTS
-          layout_column_wrap(
-            width = 1,
-            heights_equal = "row",
-            style = css(
-              min_height = "700px",
-              margin = "1rem"
-            ),
-            card(
-              full_screen = TRUE,
-              height = "100%",
-              style = css(margin = "0 0 0 -0.25rem"),
-              card_body(
-                div(
-                  style = "display: flex; align-items: center; margin-bottom: .5rem;",
-                  img(src = "products-icon.png", width = "6%", style = "margin-right: 2rem;"),
-                  h2("Explore where you will find each type of plastic here", 
-                     style = "font-size: 1.2em; margin: 0;")
-                ),
-                navset_card_tab(
-                  id = "plastic_tabs",
-                  !!!lapply(names(plastic_types_forproducts)[names(plastic_types_forproducts) != "All plastic"], 
-                            function(plastic_name) {
-                    nav_panel(
-                      plastic_name,
-                      fluidRow(
-                        column(6, plotlyOutput(paste0("pie_",
-                                                      plastic_types_forproducts[plastic_name]))),
-                        column(6,
-                               uiOutput(paste0("product_info_", plastic_types_forproducts[plastic_name])))
-                      )
-                    )
-                  })
-                )
-              )
-            )
-          )
           ), #End of Home page
 
 # -------------------------------------------------------------------------

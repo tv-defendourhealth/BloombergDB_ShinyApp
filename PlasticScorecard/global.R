@@ -12,7 +12,8 @@ library("DT")
 library("plotly")
 library("RColorBrewer")
 library("fontawesome")
-
+library("aos")
+library("shinyjs")
 
 # Source scripts -------------------------------------------------------------------------
 
@@ -116,7 +117,10 @@ create_production_panel <- function(plastic_name) {
              Facilities across the U.S. are involved in the process of making ", plastic_name, "."))
     ),
     card(
-      img(src = paste0(plastic_types[plastic_name], "_supplychain.png"), width = "100%"),
+      div(
+        style = "text-align: center;",
+        img(src = paste0(plastic_types[plastic_name], "_supplychain.png"), width = "85%")
+      ),
       p(style = "font-size: 0.9em; font-style: italic;",
       paste("Red = High hazard (Greenscreen LT-1, LT-P1, BM-1),
      Orange = Moderate hazard (Greenscreen LT-2, BM-2, or unknown),
@@ -147,3 +151,50 @@ create_production_panel <- function(plastic_name) {
     )
   )
 }
+
+create_product_panel <- function(plastic_name) {
+    fluidRow(
+      column(6, plotlyOutput(paste0("pie_", plastic_types_forproducts[plastic_name]))),
+      column(6, uiOutput(paste0("product_info_", plastic_types_forproducts[plastic_name])))
+    )
+}
+
+
+# create_product_panel <- function(plastic_name) {
+#   plastic_code <- plastic_types_forproducts[plastic_name]
+#   
+#   layout_column_wrap(
+#     width = 1,
+#     heights_equal = "row",
+#     style = css(
+#       min_height = "700px",
+#       margin = "1rem"
+#     ),
+#     card(
+#       full_screen = TRUE,
+#       height = "100%",
+#       style = css(margin = "0 0 0 -0.25rem"),
+#       card_body(
+#         div(
+#           style = "display: flex; align-items: center; margin-bottom: .5rem;",
+#           img(src = "products-icon.png", width = "6%", style = "margin-right: 2rem;"),
+#           h2("Explore where you will find each type of plastic here", 
+#              style = "font-size: 1.2em; margin: 0;")
+#         ),
+#         navset_card_tab(
+#           id = "plastic_tabs",
+#           !!!lapply(names(plastic_types_forproducts)[names(plastic_types_forproducts) != "All plastic"], 
+#                     function(plastic_name) {
+#                       nav_panel(
+#                         plastic_name,
+#                         fluidRow(
+#                           column(6, plotlyOutput(paste0("pie_", plastic_types_forproducts[plastic_name]))),
+#                           column(6, uiOutput(paste0("product_info_", plastic_types_forproducts[plastic_name])))
+#                         )
+#                       )
+#                     })
+#         )
+#       )
+#     )
+#   )
+# }
