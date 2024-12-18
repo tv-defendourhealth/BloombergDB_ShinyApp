@@ -64,21 +64,66 @@ server <- function(input, output, session) {
     if (active_tab() == "production") {
         
       return(
-          div(
-            id = "dynamic_content",
-            style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed
-            navset_card_tab(
-              id = "plastic_tabs",
-              !!!lapply(names(plastic_types)[names(plastic_types) != "All plastic"], function(plastic_name) {
-                nav_panel(
-                  title = plastic_name,
-                  create_production_panel(plastic_name) # Supply chain diagram
-                  #div(data-aos = "fade-up", create_production_panel(plastic_name))
-                  #aos(create_production_panel(plastic_name), animation = "fade-up")
+        div(
+          style = "margin-left: 10%; margin-right: 10%; margin-bottom: 20%; min-height: 1000px;",
+          card(
+            # ------ SUPPLY CHAIN PANEL
+            card_body(HTML("
+              <p>The building blocks that make up plastic are produced in petrochemical facilities across the world, with many clustered in regions of the U.S. like the Gulf Coast and the Ohio River Valley. 
+              These facilities expose thousands of people, primarily low-income communities and people of color, to the toxic fumes that come from plastic production.
+              </p>
+              <p>Here, we highlight the toxic burden of plastic production in the United States for six commonly used types of plastic:
+              </p>
+              <ol style=\"padding-left: 40px;\">
+              <li> Polypropylene (PP)</li>
+              <li> Polyethylene (PE)</li>
+              <li> Polyvinyl chloride (PVC)</li>
+              <li> Polystyrene (PS)</li>
+              <li> Polyethylene terephthalate (PET)</li>
+              <li> Polylactic acid (PLA)</li>
+              </ol>
+              <p>Below there are tabs for each type of plastic. Click on the tabs to explore the petrochemical facility production of each type of plastic. 
+              </p>
+                           "
+            )),
+            div(
+              id = "dynamic_content",
+              style = "width: 90%; margin: auto; text-align: center; min-height: 700px;",  # Adjust height as needed
+              navset_card_tab(
+                id = "plastic_tabs",
+                !!!lapply(names(plastic_types), function(plastic_name) {
+                  nav_panel(
+                    title = plastic_name,
+                    create_supplychain_panel(plastic_name) # Supply chain diagram
+                  )
+                })
+              )
+            ),
+            # ------ MAP PANEL
+            card_body(HTML("<p>Each of the steps in the process of making plastic (shown above) is made in different facilities across the United States. 
+            These facilities transport the intermediate chemicals to each other via pipeline, trains, and other means of transport. 
+            The transport itself increases the risk of hazard exposure, such as in the case of pipeline accidents or train derailments. 
+            </p>
+            <p>Each tab below corresponds to a plastic type and displays a map of all the facilities in the U.S. that are associated with the making of that plastic. 
+            </p>
+            "
+            )),
+            div(
+              id = "dynamic_content",
+              style = "width: 90%; margin: auto; text-align: center; min-height: 700px;",  # Adjust height as needed
+              navset_card_tab(
+                id = "plastic_tabs",
+                !!!lapply(names(plastic_types), function(plastic_name) {
+                  nav_panel(
+                    title = plastic_name,
+                    create_map_panel(plastic_name) # Supply chain diagram
                   )
                 })
               )
             )
+          ),
+          
+        )
         )  
       } 
     
@@ -87,36 +132,92 @@ server <- function(input, output, session) {
       return(
           div(
           id = "dynamic_content",
-          style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed 
+          style = "margin-left: 10%; margin-right: 10%; margin-bottom: 20%; min-height: 1000px;",
           tagList(
             card(
               full_screen = TRUE,
               style = "margin-bottom: 20px;",
               card_body(
+                  
+                # TEXT INTRO
                 div(
-                  style = "margin-top: 20px;",
-                  fa("flask", height = "2em"),
-                  p("Fossil-fuel plastics always require the addition of toxic additives, various chemicals that impart different properties.
-                There are thousands of types of additives that can change the plastic color, strength, durability, flexibility, heat resistance, flammabilty, and more.  
-                Industry does not disclose all the additives they use so it's impossible to create a comprehensive list.
-                Below are some of the additives we have found to be used in each type of plastic and the associated hazard scores.
-                ", 
-                    style = "font-size: .9em;"),
-                  p(style = "font-size: 0.9em; font-style: italic;",
-                    paste("Red/3 = High hazard (Greenscreen LT-1, LT-P1, BM-1),
-                 Orange/2 = Moderate hazard (Greenscreen LT-2, BM-2, or unknown),
-                 Yellow/1 = Low hazard (Greenscreen LT-3 or BM-3),
-                 Green/0 = No hazard (Greenscreen BM-4)")),
+                  #style = "text-align: left; margin-left: 5%; margin-right: 5%;",
+                  style = "text-align: left; margin: auto;",
+                  HTML("<p>Plastic polymers alone are not sufficient to be used in final products. 
+                    Fossil-fuel plastics always require the addition of toxic “additives”, various chemicals that impart different properties. 
+                    </p>
+                    <p>There are thousands of types of additives that can change the plastic color, strength, durability, flexibility, heat resistance, flammability, and more. 
+                    We have categorized chemical additives into the following categories:
+                    </p>"
+                  )
                 ),
+                
+                # IMAGE: ADDITIVE CATEGORY TABLE 
+                div(
+                  style = "text-align: center; margin-bottom: 5%;",  # Centering the image
+                  img(src = "additive_category_table.png", 
+                      alt = "Additive Categories", 
+                      style = "width: 50%; max-width: 1000px;"),  # Adjust width as needed
+                ),
+                
+                # HAZARD SCORE EXPLANATION
+                div(
+                  style = "display: flex; align-items: center;",
+                  # TEXT:
+                  div(
+                    #style = "flex: 1; margin-left: 5%; margin-right: 5%; margin-bottom: 5%;",
+                    style = "flex: 1.2; margin: auto; margin-bottom: 5%;",
+                    p(HTML(paste0("To characterize the inherent hazards of each additive, we created a \"hazard score\" that comes from the GreenScreen for Safer Chemicals. 
+                    GreenScreen compiles data and scientific literature on 18 different human health and environmental hazard endpoints and assigns a corresponding score.
+                    To learn more about GreenScreen, see ",
+                    tags$a(href = "https://www.greenscreenchemicals.org/assess/method", target = "_blank", "this link."))))
+                    ),
+                  
+                  # IMAGE: HAZARD SCORE TABLE
+                  div(
+                    #style = "flex: 1; margin-left: 5%; margin-bottom: 5%;",
+                    style = "flex: 1; margin: auto; margin-left: 5%; margin-bottom: 5%;",
+                    img(src = "hazard_score_table.png", 
+                    alt = "Hazard Score Table", 
+                    style = "width: 80%; max-width: 600px;")
+                    )
+                  ),
+                
+                # SUMMARY BAR CHART OF HAZARD SCORES
+                div(
+                  style = "display: flex; align-items: center;",
+                  div(
+                    style = "flex: 1; margin: auto;",
+                    p("A vast majority of additives in our dataset were considered a High (red) or Moderate (orange) hazard, as you can see in the following chart")
+                  ),
+                  div(
+                    style = "flex: 1.5; margin: auto;",
+                    plotOutput("hazard_score_plot")
+                  )
+                )
+                ),
+              
+              # EXPLANATION OF TABLE HERE:
+              div(
+                style = "text-align: left; margin: auto;",
+                HTML("<p>Industry does not disclose all the additives they use so it's impossible to create a comprehensive list. 
+                Below, however, are some of the additives we have found to be used in each type of plastic and the associated hazard scores. 
+                You can use the drop-down menus at the top to filter the data by plastic type or additive category. 
+                You can also sort each column as needed.</p>")
+              ),
+             
+              # ADDITIVE TABLE HERE:
+              div(
+                style = "margin-left: 5%; margin-right: 5%;",
                 card(
                   full_screen = TRUE,
                   height = "100%",
                   card_body(
                     div(uiOutput("filter_ui"),
-                        DTOutput("additives_table"), style = "font-size:85%")
-                    )
+                        DTOutput("additives_table"), style = "font-size:75%")
                   )
                 )
+              )
               )
             )
           )
@@ -127,14 +228,51 @@ server <- function(input, output, session) {
       return(
         div(
           id = "dynamic_content",
-          style = "width: 100%; margin: auto; min-height: 1000px;",  # Adjust height as needed
+          style = "margin-left: 10%; margin-right: 10%; margin-bottom: 20%; min-height: 1000px;",
           navset_card_tab(
             id = "plastic_tabs",
-            !!!lapply(names(plastic_types_forproducts), function(plastic_name) {
-              nav_panel(
-                title = plastic_name,
-                create_product_panel(plastic_name) # Supply chain diagram
-              )
+            !!!lapply(names(plastic_types), function(plastic_name) {
+              if (plastic_name == "polyethylene (PE)") { # treat PE separately to show HDPE and LDPE
+                nav_panel(
+                  title = plastic_name, 
+                  div(
+                    style = "text-align: left; margin: auto;",
+                    p("Polyethylene is produced in a low density (LDPE) form and a high density (HDPE) form.
+                      We show data for both LDPE and HDPE below:")
+                  ),
+                  div(
+                    style = "text-align: left; margin: auto;",
+                    fluidRow(
+                      style = "display: flex; align-items: center;",
+                      column(1, img(src = paste0("recyclesymbol_","2",".png"), width = "100%")),
+                      column(11, p(plastic_descriptions["HDPE"]))
+                    ),
+                    fluidRow(
+                      style = "display: flex; align-items: center;",
+                      column(6, plotlyOutput(paste0("pie_", "HDPE"))),
+                      column(6, uiOutput(paste0("product_info_", "HDPE")))
+                    )
+                  ),
+                  div(
+                    style = "text-align: left; margin: auto;",
+                    fluidRow(
+                      style = "display: flex; align-items: center;",
+                      column(1, img(src = paste0("recyclesymbol_","4",".png"), width = "100%")),
+                      column(11, p(plastic_descriptions["LDPE"]))
+                    ),
+                    fluidRow(
+                      style = "display: flex; align-items: center;",
+                      column(6, plotlyOutput(paste0("pie_", "LDPE"))),
+                      column(6, uiOutput(paste0("product_info_", "LDPE")))
+                    )
+                  )
+                )
+              } else {
+                nav_panel(
+                  title = plastic_name,
+                  create_product_panel(plastic_name) # Supply chain diagram
+                )
+              }
             })
           )
         )
@@ -155,19 +293,29 @@ server <- function(input, output, session) {
         local_abbreviation <- plastic_types[local_full_name]
         
         output[[paste0("facility_map_", local_abbreviation)]] <- renderLeaflet({
-          create_custom_map(map_data,
-                            input[[paste0("metric_", local_abbreviation)]],
-                            get_metric_name(input[[paste0("metric_", local_abbreviation)]]),
-                            local_abbreviation, 
-                            color_palette = c("#fee8c8", "#fdbb84", "#e34a33"))
+          selected_metric <- input$selected_metric
+          
+          if(selected_metric %in% c("pc_low_income", "pc_poc")) {
+            create_custom_map_dem(map_data,
+                                  selected_metric,
+                                  get_metric_name(selected_metric),
+                                  local_abbreviation, 
+                                  color_palette = c("#fee8c8", "#fdbb84", "#e34a33"))
+          } else {
+            create_custom_map_perc(map_data,
+                                   selected_metric,
+                                   get_metric_name(selected_metric),
+                                   local_abbreviation, 
+                                   color_palette = c("#fee8c8", "#fdbb84", "#e34a33"))
+          }
         })
       })
     }
   })
   
   # --------------------- CREATE ADDITIVE TABLE
-  additives_data$plastic <- as.factor(additives_data$plastic)
-  additives_data$category <- as.factor(additives_data$category)
+  additives_data$"Plastic used in" <- as.factor(additives_data$"Plastic used in")
+  additives_data$"Additive category" <- as.factor(additives_data$"Additive category")
   
   output$filter_ui <- renderUI({
     req(active_tab() == "additives")  # Only show filters when in additives tab
@@ -175,12 +323,12 @@ server <- function(input, output, session) {
     fluidRow(
       column(6,
              selectInput("plastic_filter", "Filter by Plastic:",
-                         choices = c("All", levels(additives_data$plastic)),  # Include all unique values
+                         choices = c("All", levels(additives_data$"Plastic used in")),  # Include all unique values
                          selected = "All")
       ),
       column(6,
              selectInput("category_filter", "Filter by Additive Category:",
-                         choices = c("All", levels(additives_data$category)),  # Include all unique values
+                         choices = c("All", levels(additives_data$"Additive category")),  # Include all unique values
                          selected = "All")
       )
     )
@@ -193,29 +341,70 @@ server <- function(input, output, session) {
     filtered_data <- additives_data
     
     if (input$plastic_filter != "All") {
-      filtered_data <- filtered_data[filtered_data$plastic == input$plastic_filter, ]
+      filtered_data <- filtered_data[filtered_data$"Plastic used in" == input$plastic_filter, ]
     }
     
     if (input$category_filter != "All") {
-      filtered_data <- filtered_data[filtered_data$category == input$category_filter, ]
+      filtered_data <- filtered_data[filtered_data$"Additive category" == input$category_filter, ]
     }
     
     datatable(
       filtered_data,
       options = list(
-        pageLength = 200,
+        pageLength = 20,
         autoWidth = TRUE,
         dom = 'Bfrtip',  # Include buttons and filtering
         buttons = c('copy', 'csv', 'excel', 'pdf', 'print')  # Optional: Add export buttons
-      )
+        #order = list(list(5, 'desc'))
+      ),
+      #rownames = FALSE
     ) %>% 
       formatStyle(
-        'hazard_score',
+        'Hazard score',
         backgroundColor = styleEqual(c(0, 1, 2, 3), 
-                                     c('green','yellow','orange','red')),
-        color = styleEqual(c(0, 1, 2, 3), c('white','black','black','white'))
+                                     c('#00a589','#fac541','#fc6c43','#de0f3f')),
+        color = styleEqual(c(0, 1, 2, 3), c('black','black','white','white'))
       )
   })
+  
+  # --------------------- CREATE ADDITIVE HAZARD PLOT
+  summarized_data <- additives_data %>%
+    group_by(`Plastic used in`, `Hazard score`) %>%
+    summarise(count = n()) %>%
+    group_by(`Plastic used in`) %>%
+    mutate(proportion = count / sum(count))
+  
+  hazard_3_proportions <- summarized_data %>%
+    group_by(`Plastic used in`) %>%
+    filter(`Hazard score` == 3 | `Hazard score` == "3") %>%  # Include both numeric and character "3"
+    arrange(desc(proportion)) %>%
+    pull(`Plastic used in`)
+  hazard_3_proportions <- unname(hazard_3_proportions)
+ 
+  output$hazard_score_plot <- renderPlot({
+    ggplot(additives_data, aes(x = factor(`Plastic used in`, levels = rev(hazard_3_proportions)), 
+                               fill = factor(`Hazard score`))) +
+      geom_bar(position = "fill", width = 0.6) +
+      scale_fill_manual(values = c("0" = "#00a589", "1" = "#fac541", "2" = "#fc6c43", "3" = "#de0f3f")) +
+      labs(title = "Proportion of additives with each hazard type",
+           y = "Plastic Type",
+           x = "Proportion",
+           fill = "Hazard Score") +
+      theme_void() +
+      theme(
+        panel.background = element_rect(fill = "transparent", color = NA),
+        plot.background = element_rect(fill = "transparent", color = NA),
+        legend.background = element_rect(fill = "transparent", color = NA),
+        legend.box.background = element_rect(fill = "transparent", color = NA),
+        text = element_text(family = "Arial", face = "bold", size = 12),
+        axis.text = element_text(family = "Arial", face = "bold"),
+        legend.text = element_text(family = "Arial", face = "bold"),
+        axis.text.y = element_text(angle = 0, hjust = 1),
+        axis.text.x = element_text(size = 10),
+        plot.margin = margin(10, 10, 10, 10)
+      ) +
+      coord_flip()
+  }, bg = "transparent")
   
   
   # --------------------- PRODUCT CATEGORIES
@@ -237,8 +426,8 @@ server <- function(input, output, session) {
       
       # Define the number of categories
       num_categories <- nrow(data)
-      # Create a color palette function with RdBu
-      color_palette <- colorRampPalette(brewer.pal(9, "YlGn")) 
+      # Create a color palette function with Oranges
+      color_palette <- colorRampPalette(brewer.pal(9, "Oranges")) 
       # Generate the exact number of colors needed
       chart_colors <- color_palette(num_categories)
       
@@ -295,16 +484,18 @@ server <- function(input, output, session) {
             with_images <- category_info %>% filter(!is.na(jpg_name))
             without_images <- category_info %>% filter(is.na(jpg_name)) %>% pull(subcategories)
             
-            tagList(
-              h5(paste("Example", category, "products made from", plastic_abbrev)),
+            div(
+              style = "margin: auto;",
+              
+              p(HTML(paste("<span style='font-size: 16px; font-style: italic; font-weight: bold;'>", category, "products made from", plastic_abbrev,"</span>"))),
               
               # Display subcategories with images
               if (nrow(with_images) > 0) {
-                div(style = "display: flex; flex-wrap: wrap;",
+                div(style = "display: flex; flex-wrap: wrap; margin-bottom: 5%;",
                     lapply(1:nrow(with_images), function(i) {
                       div(style = "margin: 10px; text-align: center;",
                           img(src = file.path(with_images$jpg_name[i]), 
-                              style = "max-width: 100px; max-height: 100px;"),
+                              style = "height: 150px;"),
                           p(with_images$subcategories[i])
                       )
                     })
@@ -313,11 +504,13 @@ server <- function(input, output, session) {
               
               # Display other examples as text
               if (length(without_images) > 0) {
-                tagList(
-                  h6("Other examples of products:"),
+                div(
+                  style = "margin: auto;;",
+                  h6("Other examples:", style = "margin-bottom: 10px; font-style: italic; font-weight: bold;"),
                   tags$ul(
+                    #style = "list-style-type: none; padding-left: 0;",
                     lapply(without_images, function(product) {
-                      tags$li(product)
+                      tags$li(product, style = "margin-bottom: 5px;")
                     })
                   )
                 )
@@ -335,9 +528,8 @@ server <- function(input, output, session) {
       output[[paste0("product_info_", plastic_abbrev)]] <- renderUI({
         
         data <- marketshare[marketshare$plastic == plastic_abbrev, ]
-        descriptor <- data$descriptor[1]
-        
-        HTML(descriptor)
+
+        HTML(paste0("Hover over the pie chart to see examples of each type of ", plastic_abbrev, " product."))
       })
     }, ignoreNULL = FALSE))
   })

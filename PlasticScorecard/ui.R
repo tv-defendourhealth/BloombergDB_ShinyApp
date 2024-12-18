@@ -53,20 +53,21 @@ nav_panel("Home",
              width = 1,
              heights_equal = "row",
              style = css(
-               min_height = "250px"  # Adjust this value as needed
+               min_height = "370px",  # Adjust this value as needed
+               margin_left = "10%",   
+               margin_right = "10%",
+               margin_top = "2%"
              ),
-             card(
-               class = "m-4", #adds margin
-               full_screen = FALSE,
-               height = "100%",
-               card_header("Welcome to the Plastic Scorecard Project"),
-               card_body(HTML(
-                 "The Plastic Scorecard is an initiative aimed at identifying the harms of various types of plastic commonly used today. 
-                  Our goal is to present comprehensive data and analysis to help individuals, businesses, and policymakers make informed decisions about plastic use.
-                  Here we present information about 6 of the most commonly used plastics. 
-                 <br><br>
-                 Click through the following buttons to learn about each plastic from production to final products.")
-               )
+             HTML("<p>Fossil fuel-based plastics pose a major pollution crisis across every stage of their life cycle.
+                 We often think of plastic pollution at the final stage: the waste and microplastics that pollute our oceans, landfills, and ecosystems.
+                 However, the <strong>production phase</strong> – from fossil fuel extraction, to the manufacture of plastic products – is extremely polluting.</p>
+                  <p>Here we provide data to illustrate three phases of the plastic production process:</p>
+                  <ol style=\"padding-left: 40px;\">
+                      <li>Petrochemical facilities <i class=\"fas fa-industry\" style=\"margin-left: 10px;\"></i></li>
+                      <li>Chemical additives <i class=\"fas fa-flask\" style=\"margin-left: 10px;\"></i></li>
+                      <li>Final products <i class=\"fas fa-bottle-water\" style=\"margin-left: 10px;\"></i></li>
+                  </ol>
+                  <p><strong>Click on the buttons below to explore each phase.</strong></p>"
              )
            ),
           
@@ -82,7 +83,7 @@ nav_panel("Home",
                             }
                             .arrow {
                             font-size: 36px;
-                            margin: 0 20px;
+                            margin: 0 0px;
                             }
                             .btn-icon {
                             font-size: 48px;
@@ -106,7 +107,7 @@ nav_panel("Home",
             width = 1,
             heights_equal = "row",
             style = css(
-              min_height = "300px"  # Adjust this value as needed
+              min_height = "150px"  # Adjust this value as needed
             ),
             card(
               class = "borderless-card",
@@ -120,29 +121,25 @@ nav_panel("Home",
                   tags$div(
                     style = "display: flex; flex-direction: column; align-items: center;",
                     actionButton("production_btn", "", icon = icon("industry"), class = "btn-icon"), #FONT AWESOME ICONS
-                    tags$div(style = "text-align: center; margin-top: 10px;", "Click to explore Production")
+                    tags$div(style = "text-align: center; margin-top: 5px;", "Click to learn about U.S. petrochemical facilities")
                   ),
                   tags$span(class = "arrow", HTML("&rarr;")),
                   tags$div(
                     style = "display: flex; flex-direction: column; align-items: center;",
                     actionButton("additives_btn", "", icon = icon("flask"), class = "btn-icon"),
-                    tags$div(style = "text-align: center; margin-top: 10px;", "Click to explore Additives")
+                    tags$div(style = "text-align: center; margin-top: 5px;", "Click to learn about plastic chemical additives")
                   ),
                   tags$span(class = "arrow", HTML("&rarr;")),
                   tags$div(
                     style = "display: flex; flex-direction: column; align-items: center;",
                     actionButton("products_btn", "", icon = icon("bottle-water"), class = "btn-icon"),
-                    tags$div(style = "text-align: center; margin-top: 10px;", "Click to explore Products")
+                    tags$div(style = "text-align: center; margin-top: 5px;", "Click to learn about plastic in products")
                   )
                 )
               )
             )
           ),
           
-          div(
-            p("click buttons above to learn about phases of plastic production")
-          ),
-
           # CONTENT FOR EACH TAB ---------------------------------------------------------   
          
           #aos(uiOutput("dynamic_content"), animation = "fade-up")
