@@ -49,8 +49,8 @@ create_custom_map_perc <- function(data, variable, variable_label, supply_chain_
       variable_label, ": ", round(!!sym(percentile_var), 0), " percentile</b><br>",
       "<br>",
       "Known supply chains: ", known_supply_chains, "<br>",
-      "Total CO2 emissions: ", round(co2e/1000000, 2), " MMT<br>",
-      "Total toxic emissions: ", round(total_tox, 2), " MT<br>",
+      "Total CO2 emissions: ", round(co2e/1000000, 2), " million metric tons (MMT)<br>",
+      "Total toxic emissions: ", round(total_tox, 2), " metric tons (MT)<br>",
       "POC: ", round(pc_poc, 2), " %<br>",
       "Low income: ", round(pc_low_income, 2), " %"
     ))
@@ -100,40 +100,37 @@ create_custom_map_dem <- function(data, variable, variable_label, supply_chain_t
   data <- data %>%
     filter(!is.na(latitude) & !is.na(longitude) & !is.na(!!sym(variable)))
   
+  #for custom title:
+  if (grepl("Racial", variable_label)) {
+    custom_legend <- "% who identify as POC in 3mi radius"
+  } else {
+    custom_legend <- "% who are low income in 3mi radius"
+  }
+  
   # Create custom messages with HTML formatting
   data <- data %>%
     mutate(info = paste0(
       "<b>", plant_name, "</b><br>",
-      variable_label, " in 3mi radius: ", round(!!sym(variable), 0), " %</b><br>",
+      custom_legend, ": ", round(!!sym(variable), 0), " %</b><br>",
       "<br>",
       "Known supply chains: ", known_supply_chains, "<br>",
-      "Total CO2 emissions: ", round(co2e/1000000, 2), " MMT<br>",
-      "Total toxic emissions: ", round(total_tox, 2), " lbs<br>",
-      "POC: ", round(pc_poc, 2), " %<br>",
-      "Low income: ", round(pc_low_income, 2), " %"
+      "Total CO2 emissions: ", round(co2e/1000000, 2), " million metric tons (MMT)<br>",
+      "Total toxic emissions: ", round(total_tox, 2), " metric tons (MT)<br>",
+      "% who identify as POC: ", round(pc_poc, 2), " %<br>",
+      "% who are low income: ", round(pc_low_income, 2), " %"
     ))
   
   
   # Create color palette function
-  #pal <- colorNumeric(palette = color_palette, domain = data[[variable]])
   pal <- color_palettes[[variable]]
   
-  # Create map title
-  if (!is.null(supply_chain_type)) {
-    maptitle <- paste("Supply chain:", supply_chain_type)}
-  else {
-    maptitle <- "Supply chain: All plastics" 
-  }
-  
-  
+
   # Create the map
   map <- leaflet(data) %>%
     addTiles() %>%
-    #addControl(html = paste0("<h3>",maptitle,"</h3>"), position = "topright") %>% 
     addCircleMarkers(
       lng = ~longitude,
       lat = ~latitude,
-      #radius = ~(get(percentile_var) / 10) + 2,
       radius = 5,
       color = ~pal(get(variable)),
       fillOpacity = 0.8,
@@ -144,7 +141,7 @@ create_custom_map_dem <- function(data, variable, variable_label, supply_chain_t
       position = "bottomright",
       pal = pal,
       values = ~(get(variable)),
-      title = paste(variable_label, "in 3mi radius (%)"),
+      title = custom_legend,#paste(variable_label, "in 3mi radius (%)"),
       opacity = 1
     )
   

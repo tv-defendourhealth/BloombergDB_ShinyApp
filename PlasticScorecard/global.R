@@ -26,6 +26,10 @@ additives_data <- readRDS("data/additives.rds")
 
 map_data <- readRDS("data/for_map.rds")
 
+marketshare <- readRDS("data/marketshare.rds")
+
+categories <- readRDS("data/categories.rds")
+
 # Useful stuff ----------------------------------------------------------
 
 plastic_types <- c(
@@ -50,8 +54,8 @@ plastic_types_forproducts <- c(
 metrics <- c(
   "CO2 Emissions" = "co2e",
   "Toxic Emissions" = "total_tox",
-  "POC" = "pc_poc",
-  "Low income" = "pc_low_income"
+  "Racial disparity" = "pc_poc",
+  "Income disparity" = "pc_low_income"
 )
 
 get_plastic_name <- function(code) {
@@ -76,7 +80,7 @@ plastic_descriptions <- list(
   "LDPE" = "Low-density polyethylene (LDPE) is a \'number 4\' plastic. 
             Due to its low density, LDPE is usually shapeless and transparent. 
             You will often find LDPE in products like plastic bags, ziplocks, liners, or flexible containers like squeezable bottles. 
-            Switching to products, like reusable food storage bags, can cut down on LDPE demand.",
+            Switching to products like reusable food storage bags can cut down on LDPE demand.",
   
   "PVC" = "Polyvinyl Chloride (PVC) is a \'number 3\' plastic and can be formulated with a wide range of additives for different uses. 
           PVC is commonly used in building materials, such as pipes, cable insulation, or flooring. 
@@ -128,21 +132,21 @@ create_supplychain_panel <- function(plastic_name) {
     div(
       style = "text-align: left; margin: auto;",  # Add space above the map explanation
       #fa("industry", height = "2em"),
-      if (plastic_name == "polyethylene (PE)") {
-        div(
-          style = "display: flex; align-items: center;",
-          img(src = paste0("recyclesymbol_","2-4",".png"), height = "50px", style = "margin-right: 10px;"),
-          h4(plastic_name)
-        )
-      }
-      else {
-        div(
-          style = "display: flex; align-items: center;",
-          img(src = paste0("recyclesymbol_",number,".png"), height = "50px", style = "margin-right: 10px;"),
-          h4(plastic_name)
-        )
-      }
-      ,
+      # if (plastic_name == "polyethylene (PE)") {
+      #   div(
+      #     style = "display: flex; align-items: center;",
+      #     img(src = paste0("recyclesymbol_","2-4",".png"), height = "50px", style = "margin-right: 10px;"),
+      #     h4(plastic_name)
+      #   )
+      # }
+      # else {
+      #   div(
+      #     style = "display: flex; align-items: center;",
+      #     img(src = paste0("recyclesymbol_",number,".png"), height = "50px", style = "margin-right: 10px;"),
+      #     h4(plastic_name)
+      #   )
+      # }
+      
       p(paste0("The main component of all plastic is a polymer. 
         A polymer is a large molecule that's made up of many copies of smaller molecules, called monomers, that are chemically strung together.
         The monomer for ", plastic_name, " is ", monomer, ".")),
@@ -196,24 +200,24 @@ create_map_panel <- function(plastic_name) {
     div(
       style = "text-align: left;",  # Add space above the map explanation
       #fa("map-location-dot", height = "2em"),
-      if (plastic_name == "polyethylene (PE)") {
-        div(
-          style = "display: flex; align-items: center;",
-          img(src = paste0("recyclesymbol_","2-4",".png"), height = "50px", style = "margin-right: 10px;"),
-          h4(plastic_name)
-        )
-      }
-      else {
-        div(
-          style = "display: flex; align-items: center;",
-          img(src = paste0("recyclesymbol_",number,".png"), height = "50px", style = "margin-right: 10px;"),
-          h4(plastic_name)
-        )
-      },
+      # if (plastic_name == "polyethylene (PE)") {
+      #   div(
+      #     style = "display: flex; align-items: center;",
+      #     img(src = paste0("recyclesymbol_","2-4",".png"), height = "50px", style = "margin-right: 10px;"),
+      #     h4(plastic_name)
+      #   )
+      # }
+      # else {
+      #   div(
+      #     style = "display: flex; align-items: center;",
+      #     img(src = paste0("recyclesymbol_",number,".png"), height = "50px", style = "margin-right: 10px;"),
+      #     h4(plastic_name)
+      #   )
+      # },
       p(HTML(paste0(
         "<p>Click on the facility to see relevant information about each facility, such as self-reported emissions, the demographics of the area (3 mile radius), and the associated supply chains (note: facilities often contribute to the making of multiple types of plastic!). 
         </p>
-        <p>The facilities on the map are color coded by their hazardous impact, using different metrics (CO2 emissions, toxic emissions, income, and race - see below for more details). 
+        <p>The facilities on the map are color coded by their hazardous impact, using environmental metrics (carbon dioxide (CO2) and toxic emissions) and social metrics (income and race disparity). 
         Use the drop down menu to select a metric you’re interested in:</p>
         "
       ))
@@ -225,33 +229,41 @@ create_map_panel <- function(plastic_name) {
         height = "100%",
         style = css(margin = "0 -0.25rem 0 0"),
         card_body(
-          selectInput(inputId = "selected_metric", 
-                      label = "Select Metric:",
-                      choices = metrics,
-                      selected = "co2e"),
+          fluidRow(
+            style = "display: flex; align-items: center;",
+            column(width = 4,
+                   selectInput(inputId = "selected_metric", 
+                               label = "Select Metric:",
+                               choices = metrics,
+                               selected = "co2e")
+            ),
+            column(width = 8,
+                   uiOutput(outputId = paste0("metric_description_", plastic_abbrev))
+            )
+          ),
           leafletOutput(outputId = paste0("facility_map_", plastic_abbrev), height = "500px")
         )
       )
     ),
-    div(
-      style = "text-align: left;",
-      p(HTML(paste0(
-        "<ul> 
-          <li><strong>CO2 emissions:</strong> CO2 is a greenhouse gas emitted by the burning of fossil fuels and manufacturing and is a primary contributor to a warming planet.  
-        The data comes from EPA’s FLIGHT tool and reflects self-reported data. It’s worth noting that self-reported GHG data has often shown to be underreported! 
-          </li> 
-          <li><strong>Toxic emissions:</strong> Toxic emissions refer to the total pounds of toxic chemicals released into the air, ground, or water. 
-        The data comes from the Toxic Release Inventory (TRI), an EPA tool to track toxic emissions from industry. Like CO2 emissions, the TRI data is self-reported and has been shown to be far below actual emission values.
-        </li>
-          <li><strong>POC:</strong> This refers to the percent of individuals within a 3 mile radius of the facility that are a race other than white alone and/or list their ethnicity as Hispanic or Latino (ie. anyone who is not white and non-Hispanic). 
-        The data and definition comes from EJScreen, an Environmental Justice Screening and Mapping tool by the EPA.
-        </li>
-          <li><strong>Low income:</strong> This refers to the percent of individuals within a 3 mile radius of the facility that are in households where the household income is less than or equal to twice the federal poverty level. 
-        The data and definition comes from EJScreen, an Environmental Justice Screening and Mapping tool by the EPA.
-        </li> 
-          </ul>"
-      )))
-    )
+    # div(
+    #   style = "text-align: left;",
+    #   p(HTML(paste0(
+    #     "<ul> 
+    #       <li><strong>CO2 emissions:</strong> CO2 is a greenhouse gas emitted by the burning of fossil fuels and manufacturing and is a primary contributor to a warming planet.  
+    #     The data comes from EPA’s FLIGHT tool and reflects self-reported data. It’s worth noting that self-reported GHG data has often shown to be underreported! 
+    #       </li> 
+    #       <li><strong>Toxic emissions:</strong> Toxic emissions refer to the total pounds of toxic chemicals released into the air, ground, or water. 
+    #     The data comes from the Toxic Release Inventory (TRI), an EPA tool to track toxic emissions from industry. Like CO2 emissions, the TRI data is self-reported and has been shown to be far below actual emission values.
+    #     </li>
+    #       <li><strong>POC:</strong> This refers to the percent of individuals within a 3 mile radius of the facility that are a race other than white alone and/or list their ethnicity as Hispanic or Latino (ie. anyone who is not white and non-Hispanic). 
+    #     The data and definition comes from EJScreen, an Environmental Justice Screening and Mapping tool by the EPA.
+    #     </li>
+    #       <li><strong>Low income:</strong> This refers to the percent of individuals within a 3 mile radius of the facility that are in households where the household income is less than or equal to twice the federal poverty level. 
+    #     The data and definition comes from EJScreen, an Environmental Justice Screening and Mapping tool by the EPA.
+    #     </li> 
+    #       </ul>"
+    #   )))
+    # )
   )
 }
 
@@ -270,6 +282,8 @@ create_product_panel <- function(plastic_name) {
       style = "display: flex; align-items: center;",
       column(6, plotlyOutput(paste0("pie_", plastic_abbrev))),
       column(6, uiOutput(paste0("product_info_", plastic_abbrev)))
-    )
+    ),
+    p(paste("souce: ", marketshare[marketshare$plastic == plastic_abbrev, "source_s"][1,]),
+      style = "font-size: 12px; font-style: italic;")
   )
 }

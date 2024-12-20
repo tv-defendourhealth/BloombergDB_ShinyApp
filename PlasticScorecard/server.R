@@ -33,29 +33,30 @@ generate_scorecard <- function() {
 server <- function(input, output, session) {
 
   # --------------------- TRACK THE ACTIVE BUTTON PRESS (NULL VAL TOO)
-  active_tab <- reactiveVal(NULL)
+  active_tab <- reactiveVal("production")
   
-  # Observe button clicks and update the active tab
+  #Observe button clicks and update the active tab
   observeEvent(input$production_btn, {
     active_tab("production")
-    #delay(500, { session$sendCustomMessage(type = 'scroll', message = 'dynamic_content') })
-    #session$sendCustomMessage(type = 'scroll', message = 'dynamic_content')  # Call custom scroll
-    #shinyjs::scrollTo("dynamic_content")
   })
-  
+
   observeEvent(input$additives_btn, {
     active_tab("additives")
-    #delay(500, { session$sendCustomMessage(type = 'scroll', message = 'dynamic_content') })
-    #session$sendCustomMessage(type = 'scroll', message = 'dynamic_content')  # Call custom scroll
-    #shinyjs::scrollTo("dynamic_content")
   })
-  
+
   observeEvent(input$products_btn, {
     active_tab("products")
-    #delay(500, { session$sendCustomMessage(type = 'scroll', message = 'dynamic_content') })
-    #session$sendCustomMessage(type = 'scroll', message = 'dynamic_content')  # Call custom scroll
-    #shinyjs::scrollTo("dynamic_content")
   })
+  
+  observe({
+    req(active_tab())  # Ensure active_tab() is valid
+    
+    selector <- paste0(active_tab(), "_btn")
+
+    shinyjs::removeClass(selector = ".btn-icon", class = "active-btn")
+    shinyjs::addClass(selector, "active-btn")
+  })
+
   
   # --------------------- RENDER DYNAMIC CONTENT BASED ON ACTIVE BUTTON PRESS
   output$dynamic_content <- renderUI({
@@ -67,6 +68,7 @@ server <- function(input, output, session) {
         div(
           style = "margin-left: 10%; margin-right: 10%; margin-bottom: 20%; min-height: 1000px;",
           card(
+            card_title("Petrochemical facilities"),
             # ------ SUPPLY CHAIN PANEL
             card_body(HTML("
               <p>The building blocks that make up plastic are produced in petrochemical facilities across the world, with many clustered in regions of the U.S. like the Gulf Coast and the Ohio River Valley. 
@@ -135,6 +137,7 @@ server <- function(input, output, session) {
           style = "margin-left: 10%; margin-right: 10%; margin-bottom: 20%; min-height: 1000px;",
           tagList(
             card(
+              card_title("Plastic additives"),
               full_screen = TRUE,
               style = "margin-bottom: 20px;",
               card_body(
@@ -229,51 +232,67 @@ server <- function(input, output, session) {
         div(
           id = "dynamic_content",
           style = "margin-left: 10%; margin-right: 10%; margin-bottom: 20%; min-height: 1000px;",
-          navset_card_tab(
-            id = "plastic_tabs",
-            !!!lapply(names(plastic_types), function(plastic_name) {
-              if (plastic_name == "polyethylene (PE)") { # treat PE separately to show HDPE and LDPE
-                nav_panel(
-                  title = plastic_name, 
-                  div(
-                    style = "text-align: left; margin: auto;",
-                    p("Polyethylene is produced in a low density (LDPE) form and a high density (HDPE) form.
+          card(
+            card_title("Manufactured plastic products"),
+            p(HTML(paste0(
+              "<p>Plastic is found in products all around us – from the containers we eat from, to the supplies used to build our homes. 
+            As the other areas of this site have shown, different types of plastic are associated with different harms. 
+            Below, we have tabs for each of the six most commonly used plastics (Polypropylene (PP), Polyethylene (PE), Polyvinyl chloride (PVC), Polystyrene (PS), Polyethylene terephthalate (PET), Polylactic acid (PLA)). 
+            </p>
+            <p>For each plastic, you will see a pie chart illustrating the broad categories of products manufactured from that type of plastic. 
+            Industry keeps much of this information secret, so the most up-to-date data is difficult to find — This however gives a good idea. 
+            If you hover over the segment of the pie chart, we have provided specific examples that you will recognize. 
+            </p>
+            "
+            ))),
+            navset_card_tab(
+              id = "plastic_tabs",
+              !!!lapply(names(plastic_types), function(plastic_name) {
+                if (plastic_name == "polyethylene (PE)") { # treat PE separately to show HDPE and LDPE
+                  nav_panel(
+                    title = plastic_name, 
+                    div(
+                      style = "text-align: left; margin: auto;",
+                      p("Polyethylene is produced in a low density (LDPE) form and a high density (HDPE) form.
                       We show data for both LDPE and HDPE below:")
-                  ),
-                  div(
-                    style = "text-align: left; margin: auto;",
-                    fluidRow(
-                      style = "display: flex; align-items: center;",
-                      column(1, img(src = paste0("recyclesymbol_","2",".png"), width = "100%")),
-                      column(11, p(plastic_descriptions["HDPE"]))
                     ),
-                    fluidRow(
-                      style = "display: flex; align-items: center;",
-                      column(6, plotlyOutput(paste0("pie_", "HDPE"))),
-                      column(6, uiOutput(paste0("product_info_", "HDPE")))
-                    )
-                  ),
-                  div(
-                    style = "text-align: left; margin: auto;",
-                    fluidRow(
-                      style = "display: flex; align-items: center;",
-                      column(1, img(src = paste0("recyclesymbol_","4",".png"), width = "100%")),
-                      column(11, p(plastic_descriptions["LDPE"]))
+                    div(
+                      style = "text-align: left; margin: auto;",
+                      fluidRow(
+                        style = "display: flex; align-items: center;",
+                        column(1, img(src = paste0("recyclesymbol_","2",".png"), width = "100%")),
+                        column(11, p(plastic_descriptions["HDPE"]))
+                      ),
+                      fluidRow(
+                        style = "display: flex; align-items: center;",
+                        column(6, plotlyOutput(paste0("pie_", "HDPE"))),
+                        column(6, uiOutput(paste0("product_info_", "HDPE")))
+                      )
                     ),
-                    fluidRow(
-                      style = "display: flex; align-items: center;",
-                      column(6, plotlyOutput(paste0("pie_", "LDPE"))),
-                      column(6, uiOutput(paste0("product_info_", "LDPE")))
+                    div(
+                      style = "text-align: left; margin: auto;",
+                      fluidRow(
+                        style = "display: flex; align-items: center;",
+                        column(1, img(src = paste0("recyclesymbol_","4",".png"), width = "100%")),
+                        column(11, p(plastic_descriptions["LDPE"]))
+                      ),
+                      fluidRow(
+                        style = "display: flex; align-items: center;",
+                        column(6, plotlyOutput(paste0("pie_", "LDPE"))),
+                        column(6, uiOutput(paste0("product_info_", "LDPE")))
+                      ),
+                      p(paste("souce: ", marketshare[marketshare$plastic == "LDPE", "source_s"][1,]),
+                        style = "font-size: 12px; font-style: italic;")
                     )
                   )
-                )
-              } else {
-                nav_panel(
-                  title = plastic_name,
-                  create_product_panel(plastic_name) # Supply chain diagram
-                )
-              }
-            })
+                } else {
+                  nav_panel(
+                    title = plastic_name,
+                    create_product_panel(plastic_name)
+                  )
+                }
+              })
+            )
           )
         )
       )  
@@ -309,9 +328,20 @@ server <- function(input, output, session) {
                                    color_palette = c("#fee8c8", "#fdbb84", "#e34a33"))
           }
         })
+        output[[paste0("metric_description_", local_abbreviation)]] <- renderUI({
+          selected_metric <- input$selected_metric
+          description <- switch(input$selected_metric,
+                                "co2e" = " CO2 (carbon dioxide) is a greenhouse gas emitted by the burning of fossil fuels and manufacturing, and is a primary contributor to a warming planet. The data comes from EPA’s FLIGHT tool and reflects self-reported data. It’s worth noting that self-reported GHG data is often underreported!",
+                                "total_tox" = "Toxic emissions refer to the total pounds of toxic chemicals released into the air, ground, or water. The data comes from the Toxic Release Inventory (TRI), an EPA tool to track toxic emissions from industry. Like CO2 emissions, the TRI data is self-reported and has been shown to be far below actual emission values.",
+                                "pc_poc" = "Racial disparity refers to the percent of individuals within a 3 mile radius of the facility that identify as a person of color (POC): a race other than white alone and/or list their ethnicity as Hispanic or Latino (ie. anyone who is not white and non-Hispanic). The data and definition comes from EJScreen, an Environmental Justice Screening and Mapping tool by the EPA.",
+                                "pc_low_income" = "Income disparity refers to the percent of individuals within a 3 mile radius of the facility that are in households where the household income is less than or equal to twice the federal poverty level. The data and definition comes from EJScreen, an Environmental Justice Screening and Mapping tool by the EPA.")
+          HTML(paste0("<p style='padding-top: 25px; font-size: 12px; text-align: left;'><em>", description, "</em></p>"))
+        })
+        
       })
     }
   })
+
   
   # --------------------- CREATE ADDITIVE TABLE
   additives_data$"Plastic used in" <- as.factor(additives_data$"Plastic used in")
@@ -386,11 +416,14 @@ server <- function(input, output, session) {
                                fill = factor(`Hazard score`))) +
       geom_bar(position = "fill", width = 0.6) +
       scale_fill_manual(values = c("0" = "#00a589", "1" = "#fac541", "2" = "#fc6c43", "3" = "#de0f3f")) +
+      scale_y_continuous(labels = scales::percent_format(scale = 100), 
+                         breaks = seq(0, 1, 0.2),
+                         limits = c(0, 1)) +
       labs(title = "Proportion of additives with each hazard type",
-           y = "Plastic Type",
-           x = "Proportion",
+           x = "Plastic Type",
+           y = "% of additives",
            fill = "Hazard Score") +
-      theme_void() +
+      theme_minimal() +
       theme(
         panel.background = element_rect(fill = "transparent", color = NA),
         plot.background = element_rect(fill = "transparent", color = NA),
@@ -409,10 +442,6 @@ server <- function(input, output, session) {
   
   # --------------------- PRODUCT CATEGORIES
   
-    # Load data:
-  marketshare <- readRDS("data/marketshare.rds")
-  categories <- readRDS("data/categories.rds")
-
   # Create pie charts for each plastic type:
   lapply((names(plastic_types_forproducts)), function(plastic_name) {
     
@@ -495,7 +524,7 @@ server <- function(input, output, session) {
                     lapply(1:nrow(with_images), function(i) {
                       div(style = "margin: 10px; text-align: center;",
                           img(src = file.path(with_images$jpg_name[i]), 
-                              style = "height: 150px;"),
+                              style = "height: 100px;"),
                           p(with_images$subcategories[i])
                       )
                     })

@@ -9,9 +9,9 @@
 
 
 ui <- page_navbar(
+  shinyjs::useShinyjs(),
   
   title = "Plastic Scorecard",
-  #theme = bs_theme(version = 5, bootswatch = "united"),
   theme = bs_theme(
     bg = "#fcfcfa",
     fg = "#101010",
@@ -53,7 +53,7 @@ nav_panel("Home",
              width = 1,
              heights_equal = "row",
              style = css(
-               min_height = "370px",  # Adjust this value as needed
+               min_height = "280px",  # Adjust this value as needed
                margin_left = "10%",   
                margin_right = "10%",
                margin_top = "2%"
@@ -85,7 +85,7 @@ nav_panel("Home",
                             font-size: 36px;
                             margin: 0 0px;
                             }
-                            .btn-icon {
+                             .btn-icon {
                             font-size: 48px;
                             width: 120px !important;
                             height: 120px !important;
@@ -97,17 +97,25 @@ nav_panel("Home",
                             border: 2px solid #dee2e6;
                             transition: all 0.3s ease;
                             }
-                            .btn-icon: hover {
-                            background-color: #e9ecef; 
-                            transform: scale(1.05);
-                            }"))
+                            
+                            .btn-icon:hover {
+                              background-color: #d2702b;
+                              color: #fcfcfa;
+                              transform: scale(1.05);
+                            }
+                            .btn-icon.active-btn {
+                              background-color: #d2702b;
+                              color: #fcfcfa;
+                              transform: scale(1.05);
+                            }"
+                            ))
           ),
-          
+
           layout_column_wrap(
             width = 1,
             heights_equal = "row",
             style = css(
-              min_height = "150px"  # Adjust this value as needed
+              min_height = "300px"  # Adjust this value as needed
             ),
             card(
               class = "borderless-card",
@@ -120,7 +128,7 @@ nav_panel("Home",
                   style = "display: flex; align-items: center; justify-content: center; height: 100%;",
                   tags$div(
                     style = "display: flex; flex-direction: column; align-items: center;",
-                    actionButton("production_btn", "", icon = icon("industry"), class = "btn-icon"), #FONT AWESOME ICONS
+                    actionButton("production_btn", "", icon = icon("industry"), class = "btn-icon active-btn"), #FONT AWESOME ICONS
                     tags$div(style = "text-align: center; margin-top: 5px;", "Click to learn about U.S. petrochemical facilities")
                   ),
                   tags$span(class = "arrow", HTML("&rarr;")),
@@ -139,33 +147,42 @@ nav_panel("Home",
               )
             )
           ),
-          
           # CONTENT FOR EACH TAB ---------------------------------------------------------   
-         
-          #aos(uiOutput("dynamic_content"), animation = "fade-up")
+          
           uiOutput("dynamic_content")
           
           ), #End of Home page
 
 # -------------------------------------------------------------------------
 
-  nav_panel("Methods", value = "methods_panel",
-            h2("Methods"),
-            p("This section will describe the methods used in our analysis.")
-  ),
+  # nav_panel("Methods", value = "methods_panel",
+  #           h2("Methods"),
+  #           p("This section will describe the methods used in our analysis.")
+  # ),
   
 # -------------------------------------------------------------------------
 
-  nav_panel("Sources",
-            h2("Sources"),
-            p("Here you can find information about our data sources.")
-  ),
-  
-# -------------------------------------------------------------------------
-
-  nav_panel("Explore Data",
-            h2("Explore the Data"),
-            
+  nav_panel("Petrochem Facility Database",
+            h3("Explore the full petrochemical facility database"),
+            fluidRow(
+              style = "display: flex; align-items: center; margin-bottom: 40px;",
+              column(width = 5, 
+                     HTML(paste0(
+                       "<div style='margin-right: 20px;'>",
+                      "<p>Here we present our full petrochemical facility database for you to explore. Our database contains information on 140 existing petrochem facilities in the United States. 
+                      </p>
+                      <p>Use the dropdown menus to filter the database by owner, location (state or city), or the the associated supply chain (one of the six types of plastic we have focused on: Polypropylene (PP), Polyethylene (PE), Polyvinyl chloride (PVC), Polystyrene (PS), Polyethylene terephthalate (PET), Polylactic acid (PLA))
+                      </p>
+                      <p>Click on the arrows above each column to sort the data. 
+                      </p>",
+                      "</div>"
+                    )) ),
+              column(width = 7,
+                     div(style = "margin-left: 20px;",  
+                         img(src = "fullDB_table.png", height = "400px")
+                     )
+                     )
+            ),
             # Dropdowns for filtering
             fluidRow(
               column(3, selectInput("owner_name", "Owner Name", choices = c("All", unique(display_db$`Owner Name`)))),
