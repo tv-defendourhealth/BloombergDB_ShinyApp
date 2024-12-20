@@ -1,0 +1,10 @@
+name: plastic-production-db
+title:
+username: defendourhealth-plasticscorecard
+account: defendourhealth-plasticscorecard
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13629273
+bundleId: 9552176
+url: https://defendourhealth.shinyapps.io/plastic-production-db/
+version: 1
